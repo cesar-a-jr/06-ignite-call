@@ -49,7 +49,11 @@ export default function ConnectCalendar() {
           </AuthError>
         )}
 
-        <Button type="submit" disabled={!isSingneIn}>
+        <Button
+          type="submit"
+          onClick={() => router.push('/register/time-intervals')}
+          disabled={!isSingneIn}
+        >
           Proximo passo <ArrowRight />
         </Button>
       </ConnectBox>
