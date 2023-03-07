@@ -1,9 +1,8 @@
-/* eslint-disable camelcase */
-import { prisma } from '@/lib/prisma'
 import dayjs from 'dayjs'
 import { NextApiRequest, NextApiResponse } from 'next'
+import { prisma } from '../../../../lib/prisma'
 
-export default async function handle(
+export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
@@ -15,7 +14,7 @@ export default async function handle(
   const { date } = req.query
 
   if (!date) {
-    return res.status(400).json({ message: 'Date not provided' })
+    return res.status(400).json({ message: 'Date no provided.' })
   }
 
   const user = await prisma.user.findUnique({
@@ -25,14 +24,14 @@ export default async function handle(
   })
 
   if (!user) {
-    return res.status(400).json({ message: 'User does not exist' })
+    return res.status(400).json({ message: 'User does not exist.' })
   }
 
   const referenceDate = dayjs(String(date))
   const isPastDate = referenceDate.endOf('day').isBefore(new Date())
 
   if (isPastDate) {
-    return res.json({ availableTimes: [], possibleTimes: [] })
+    return res.json({ possibleTimes: [], availableTimes: [] })
   }
 
   const userAvailability = await prisma.userTimeInterval.findFirst({
@@ -43,7 +42,7 @@ export default async function handle(
   })
 
   if (!userAvailability) {
-    return res.json({ availableTimes: [], possibleTimes: [] })
+    return res.json({ possibleTimes: [], availableTimes: [] })
   }
 
   const { time_start_in_minutes, time_end_in_minutes } = userAvailability
@@ -58,6 +57,9 @@ export default async function handle(
   )
 
   const blockedTimes = await prisma.scheduling.findMany({
+    select: {
+      date: true,
+    },
     where: {
       user_id: user.id,
       date: {
@@ -68,9 +70,13 @@ export default async function handle(
   })
 
   const availableTimes = possibleTimes.filter((time) => {
-    return !blockedTimes.some(
+    const isTimeBlocked = blockedTimes.some(
       (blockedTime) => blockedTime.date.getHours() === time,
     )
+
+    const isTimeInPast = referenceDate.set('hour', time).isBefore(new Date())
+
+    return !isTimeBlocked && !isTimeInPast
   })
 
   return res.json({ possibleTimes, availableTimes })
