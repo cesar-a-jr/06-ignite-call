@@ -1,9 +1,9 @@
-import { PrismaAdapter } from '@/lib/auth/prisma-adapter'
 import { NextApiRequest, NextApiResponse, NextPageContext } from 'next'
 import NextAuth, { NextAuthOptions } from 'next-auth'
 import GoogleProvider, { GoogleProfile } from 'next-auth/providers/google'
+import { PrismaAdapter } from '../../../lib/auth/prisma-adapter'
 
-export function buildAuthOptions(
+export function buildNextAuthOptions(
   req: NextApiRequest | NextPageContext['req'],
   res: NextApiResponse | NextPageContext['res'],
 ): NextAuthOptions {
@@ -15,8 +15,11 @@ export function buildAuthOptions(
         clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
         authorization: {
           params: {
+            prompt: 'consent',
+            access_type: 'offline',
+            response_type: 'code',
             scope:
-              ' https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/calendar',
+              'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/calendar',
           },
         },
         profile(profile: GoogleProfile) {
@@ -28,9 +31,6 @@ export function buildAuthOptions(
             avatar_url: profile.picture,
           }
         },
-        httpOptions: {
-          timeout: 40000,
-        },
       }),
     ],
     callbacks: {
@@ -38,11 +38,11 @@ export function buildAuthOptions(
         if (
           !account?.scope?.includes('https://www.googleapis.com/auth/calendar')
         ) {
-          return '/register/connect-calendar/?error=permissions'
+          return '/register/connect-calendar?error=permissions'
         }
+
         return true
       },
-
       async session({ session, user }) {
         return {
           ...session,
@@ -54,5 +54,5 @@ export function buildAuthOptions(
 }
 
 export default async function auth(req: NextApiRequest, res: NextApiResponse) {
-  return await NextAuth(req, res, buildAuthOptions(req, res))
+  return NextAuth(req, res, buildNextAuthOptions(req, res))
 }

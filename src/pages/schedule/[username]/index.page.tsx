@@ -1,8 +1,9 @@
-import { prisma } from '@/lib/prisma'
 import { Avatar, Heading, Text } from '@ignite-ui/react'
 import { GetStaticPaths, GetStaticProps } from 'next'
+import { NextSeo } from 'next-seo'
+import { prisma } from '../../../lib/prisma'
 import { ScheduleForm } from './ScheduleForm'
-import { Contariner, UserHeader } from './styles'
+import { Container, UserHeader } from './styles'
 
 interface ScheduleProps {
   user: {
@@ -12,16 +13,21 @@ interface ScheduleProps {
   }
 }
 
-export default function schedule({ user }: ScheduleProps) {
+export default function Schedule({ user }: ScheduleProps) {
   return (
-    <Contariner>
-      <UserHeader>
-        <Avatar src={user.avatarUrl} />
-        <Heading>{user.name}</Heading>
-        <Text>{user.bio}</Text>
-      </UserHeader>
-      <ScheduleForm />
-    </Contariner>
+    <>
+      <NextSeo title={`Agendar com ${user.name} | Ignite Call`} />
+
+      <Container>
+        <UserHeader>
+          <Avatar src={user.avatarUrl} />
+          <Heading>{user.name}</Heading>
+          <Text>{user.bio}</Text>
+        </UserHeader>
+
+        <ScheduleForm />
+      </Container>
+    </>
   )
 }
 
@@ -55,6 +61,6 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
         avatarUrl: user.avatar_url,
       },
     },
-    revalidate: 60 * 60 * 24,
+    revalidate: 60 * 60 * 24, // 1 day
   }
 }
