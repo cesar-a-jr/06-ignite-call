@@ -46,7 +46,7 @@ export function CalendarStep({ onSelectDateTime }: CalendarStepProps) {
           date: selectedDateWithoutTime,
         },
       })
-
+      console.log(response.data)
       return response.data
     },
     {
